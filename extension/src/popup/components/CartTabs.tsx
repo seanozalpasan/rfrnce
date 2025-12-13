@@ -2,12 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { getCarts, updateCart } from '../../shared/api';
 import { getActiveCartId, setActiveCartId as setActiveCartIdStorage } from '../../shared/storage';
 import type { Cart } from '../../shared/types';
+import AddCartModal from './AddCartModal';
 
 function CartTabs() {
   const [carts, setCarts] = useState<Cart[]>([]);
   const [activeCartId, setActiveCartId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
 
   // Fetch carts and active cart ID on mount
   useEffect(() => {
@@ -26,7 +28,7 @@ function CartTabs() {
         setCarts(response.data);
 
         // Get stored active cart ID
-        const storedActiveId = await getActiveCartIdStorage();
+        const storedActiveId = await getActiveCartId();
 
         // Find if stored cart exists in the list
         const storedCartExists = response.data.find(c => c.id === storedActiveId);
@@ -86,9 +88,25 @@ function CartTabs() {
   }
 
   if (carts.length === 0) {
-    return <div className="cart-tabs-container">
-      <p className="text-secondary">No carts yet. Create your first cart!</p>
-    </div>;
+    return (
+      <div className="cart-tabs-container">
+        <div className="cart-tabs">
+          <button className="add-cart-btn" onClick={() => setShowAddModal(true)}>
+            Add Cart +
+          </button>
+        </div>
+
+        {/* Add Cart Modal */}
+        {showAddModal && (
+          <AddCartModal
+            onClose={() => setShowAddModal(false)}
+            onSuccess={() => {
+              loadCarts(); // Refresh cart list
+            }}
+          />
+        )}
+      </div>
+    );
   }
 
   return (
@@ -105,7 +123,22 @@ function CartTabs() {
             {cart.isFrozen && ' 🔒'}
           </button>
         ))}
+
+        {/* Add Cart Button */}
+        <button className="add-cart-btn" onClick={() => setShowAddModal(true)}>
+          Add Cart +
+        </button>
       </div>
+
+      {/* Add Cart Modal */}
+      {showAddModal && (
+        <AddCartModal
+          onClose={() => setShowAddModal(false)}
+          onSuccess={() => {
+            loadCarts(); // Refresh cart list
+          }}
+        />
+      )}
     </div>
   );
 }
