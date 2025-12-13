@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Rfrnce",
+  "version": "1.0.0",
+  "description": "Compare products across retail sites with AI-powered reports",
+  "permissions": ["storage", "activeTab", "tabs"],
+  "host_permissions": [
+    "https://your-backend.vercel.app/*",
+    "https://www.amazon.com/*",
+    "https://www.walmart.com/*",
+    "https://www.bestbuy.com/*",
+    "https://www.target.com/*",
+    "https://www.ebay.com/*",
+    "https://www.newegg.com/*"
+  ],
+  "action": {
+    "default_popup": "src/popup/index.html"
+  },
+  "background": {
+    "service_worker": "src/background/service-worker.ts",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.amazon.com/*",
+        "https://www.walmart.com/*",
+        "https://www.bestbuy.com/*",
+        "https://www.target.com/*",
+        "https://www.ebay.com/*",
+        "https://www.newegg.com/*"
+      ],
+      "js": ["src/content/content.ts"]
+    }
+  ]
+}
