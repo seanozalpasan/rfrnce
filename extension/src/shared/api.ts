@@ -3,35 +3,10 @@
  */
 
 import { getUserUuid } from './storage';
+import type { ApiResponse, User } from './types';
 
 // API base URL - will be changed to Vercel URL when deployed
 const API_BASE_URL = 'http://localhost:3000/api';
-
-/**
- * API response types
- */
-interface ApiSuccessResponse<T> {
-  success: true;
-  data: T;
-}
-
-interface ApiErrorResponse {
-  success: false;
-  error: {
-    code: string;
-    message: string;
-  };
-}
-
-type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
-
-/**
- * User types
- */
-interface User {
-  id: number;
-  uuid: string;
-}
 
 /**
  * Make authenticated API request
