@@ -147,3 +147,61 @@ body {
 .mb-md {
   margin-bottom: var(--spacing-md);
 }
+
+/* Cart Tabs */
+.cart-tabs-container {
+  margin-bottom: var(--spacing-lg);
+}
+
+.cart-tabs {
+  display: flex;
+  gap: var(--spacing-sm);
+  overflow-x: auto;
+  padding-bottom: var(--spacing-xs);
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-bg-tertiary) transparent;
+}
+
+.cart-tabs::-webkit-scrollbar {
+  height: 4px;
+}
+
+.cart-tabs::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.cart-tabs::-webkit-scrollbar-thumb {
+  background: var(--color-bg-tertiary);
+  border-radius: var(--radius-sm);
+}
+
+.cart-tab {
+  background: var(--color-bg-secondary);
+  color: var(--color-text-secondary);
+  border: none;
+  border-radius: var(--radius-pill);
+  padding: var(--spacing-xs) var(--spacing-md);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium, 500);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.cart-tab:hover:not(:disabled):not(.active) {
+  background: var(--color-bg-tertiary);
+}
+
+.cart-tab.active {
+  background: var(--color-accent-primary);
+  color: var(--color-text-primary);
+}
+
+.cart-tab.frozen {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.cart-tab:disabled {
+  cursor: not-allowed;
+}

@@ -1,4 +1,5 @@
 import React from 'react';
+import CartTabs from './components/CartTabs';
 
 function App() {
   return (
@@ -10,9 +11,12 @@ function App() {
 
       {/* Main Content */}
       <main className="main-content">
-        {/* Cart tabs will go here (Task 3.3) */}
+        {/* Cart tabs */}
+        <CartTabs />
+
+        {/* Add Cart button will go here (Task 3.4) */}
         {/* Product list will go here (Task 4.9) */}
-        <p className="text-secondary">Welcome to Rfrnce! Create your first cart to get started.</p>
+        <p className="text-secondary">Select a cart to view products.</p>
       </main>
 
       {/* Footer - Report Buttons */}

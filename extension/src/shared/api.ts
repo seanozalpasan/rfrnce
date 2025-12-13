@@ -3,7 +3,7 @@
  */
 
 import { getUserUuid } from './storage';
-import type { ApiResponse, User } from './types';
+import type { ApiResponse, User, Cart, CreateCartPayload, UpdateCartPayload } from './types';
 
 // API base URL - will be changed to Vercel URL when deployed
 const API_BASE_URL = 'http://localhost:3000/api';
@@ -55,6 +55,44 @@ export async function initUser(uuid: string): Promise<ApiResponse<User>> {
   return apiRequest<User>('/users/init', {
     method: 'POST',
     body: JSON.stringify({ uuid }),
+  });
+}
+
+/**
+ * Get all carts for the current user
+ */
+export async function getCarts(): Promise<ApiResponse<Cart[]>> {
+  return apiRequest<Cart[]>('/carts', {
+    method: 'GET',
+  });
+}
+
+/**
+ * Create a new cart
+ */
+export async function createCart(payload: CreateCartPayload): Promise<ApiResponse<Cart>> {
+  return apiRequest<Cart>('/carts', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Update a cart (rename or set active)
+ */
+export async function updateCart(cartId: number, payload: UpdateCartPayload): Promise<ApiResponse<Cart>> {
+  return apiRequest<Cart>(`/carts/${cartId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Delete a cart
+ */
+export async function deleteCart(cartId: number): Promise<ApiResponse<{ message: string }>> {
+  return apiRequest<{ message: string }>(`/carts/${cartId}`, {
+    method: 'DELETE',
   });
 }
 
