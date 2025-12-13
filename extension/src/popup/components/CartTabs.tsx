@@ -3,6 +3,8 @@ import { getCarts, updateCart } from '../../shared/api';
 import { getActiveCartId, setActiveCartId as setActiveCartIdStorage } from '../../shared/storage';
 import type { Cart } from '../../shared/types';
 import AddCartModal from './AddCartModal';
+import RenameCartModal from './RenameCartModal';
+import DeleteCartModal from './DeleteCartModal';
 
 function CartTabs() {
   const [carts, setCarts] = useState<Cart[]>([]);
@@ -10,6 +12,8 @@ function CartTabs() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [renameCart, setRenameCart] = useState<Cart | null>(null);
+  const [deleteCartData, setDeleteCartData] = useState<Cart | null>(null);
 
   // Fetch carts and active cart ID on mount
   useEffect(() => {
@@ -113,15 +117,38 @@ function CartTabs() {
     <div className="cart-tabs-container">
       <div className="cart-tabs">
         {carts.map((cart) => (
-          <button
-            key={cart.id}
-            className={`cart-tab ${cart.id === activeCartId ? 'active' : ''} ${cart.isFrozen ? 'frozen' : ''}`}
-            onClick={() => handleSetActive(cart.id)}
-            disabled={cart.isFrozen}
-          >
-            {cart.name}
-            {cart.isFrozen && ' 🔒'}
-          </button>
+          <div key={cart.id} className="cart-tab-wrapper">
+            <button
+              className={`cart-tab ${cart.id === activeCartId ? 'active' : ''} ${cart.isFrozen ? 'frozen' : ''}`}
+              onClick={() => handleSetActive(cart.id)}
+              disabled={cart.isFrozen}
+            >
+              {cart.name}
+              {cart.isFrozen && ' 🔒'}
+            </button>
+            <div className="cart-tab-actions">
+              <button
+                className="cart-tab-action-btn"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setRenameCart(cart);
+                }}
+                title="Rename cart"
+              >
+                ✏️
+              </button>
+              <button
+                className="cart-tab-action-btn delete"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleteCartData(cart);
+                }}
+                title="Delete cart"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
         ))}
 
         {/* Add Cart Button */}
@@ -134,6 +161,31 @@ function CartTabs() {
       {showAddModal && (
         <AddCartModal
           onClose={() => setShowAddModal(false)}
+          onSuccess={() => {
+            loadCarts(); // Refresh cart list
+          }}
+        />
+      )}
+
+      {/* Rename Cart Modal */}
+      {renameCart && (
+        <RenameCartModal
+          cartId={renameCart.id}
+          currentName={renameCart.name}
+          onClose={() => setRenameCart(null)}
+          onSuccess={() => {
+            loadCarts(); // Refresh cart list
+          }}
+        />
+      )}
+
+      {/* Delete Cart Modal */}
+      {deleteCartData && (
+        <DeleteCartModal
+          cartId={deleteCartData.id}
+          cartName={deleteCartData.name}
+          hasReports={deleteCartData.reportCount > 0}
+          onClose={() => setDeleteCartData(null)}
           onSuccess={() => {
             loadCarts(); // Refresh cart list
           }}

@@ -130,6 +130,16 @@ body {
   background: rgba(74, 144, 164, 0.1);
 }
 
+.btn-danger {
+  background: var(--color-status-error);
+  color: var(--color-text-primary);
+  border: none;
+}
+
+.btn-danger:hover:not(:disabled) {
+  background: #a33025;
+}
+
 /* Utility classes */
 .text-secondary {
   color: var(--color-text-secondary);
@@ -206,6 +216,44 @@ body {
   cursor: not-allowed;
 }
 
+.cart-tab-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.cart-tab-actions {
+  display: none;
+  gap: 2px;
+  margin-left: var(--spacing-xs);
+}
+
+.cart-tab-wrapper:hover .cart-tab-actions {
+  display: flex;
+}
+
+.cart-tab-action-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-xs);
+  transition: color 0.2s ease;
+}
+
+.cart-tab-action-btn:hover {
+  color: var(--color-text-primary);
+}
+
+.cart-tab-action-btn.delete:hover {
+  color: var(--color-status-error);
+}
+
 /* Modal */
 .modal-overlay {
   position: fixed;
@@ -233,6 +281,10 @@ body {
   font-weight: var(--font-weight-semibold, 600);
   margin-bottom: var(--spacing-lg);
   color: var(--color-text-primary);
+}
+
+.modal-body {
+  margin-bottom: var(--spacing-md);
 }
 
 /* Form */
