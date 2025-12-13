@@ -8,7 +8,14 @@ const app = new Hono();
 
 // Configure CORS for Chrome extension
 app.use('/*', cors({
-  origin: ['chrome-extension://*'],
+  origin: (origin) => {
+    // Allow all chrome extensions (works for any extension ID)
+    if (origin?.startsWith('chrome-extension://')) return origin;
+    // Allow localhost for testing
+    if (origin?.startsWith('http://localhost')) return origin;
+    // Block all other origins
+    return '';
+  },
   allowMethods: ['GET', 'POST', 'PATCH', 'DELETE'],
   allowHeaders: ['Content-Type', 'X-User-UUID'],
 }));
