@@ -2,6 +2,7 @@
 // Injects floating button on whitelisted retail sites
 
 import { isWhitelistedDomain, isProductPage } from '../shared/whitelist';
+import type { Cart } from '../shared/types';
 
 console.log('Rfrnce content script loaded');
 
@@ -337,7 +338,7 @@ function showToast(
       }
 
       // Filter out current cart
-      const otherCarts = cartsResponse.data.filter((c) => c.id !== options.cartId);
+      const otherCarts = cartsResponse.data.filter((c: Cart) => c.id !== options.cartId);
 
       if (otherCarts.length === 0) {
         dropdownContainer.innerHTML = '<div style="padding: 8px; color: #a0a0a0;">No other carts available</div>';
@@ -348,7 +349,7 @@ function showToast(
       const dropdown = document.createElement('div');
       dropdown.className = 'toast-dropdown';
 
-      otherCarts.forEach((cart) => {
+      otherCarts.forEach((cart: Cart) => {
         const option = document.createElement('div');
         option.className = 'cart-option';
 
