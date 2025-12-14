@@ -107,6 +107,20 @@ export async function addProduct(cartId: number, url: string): Promise<ApiRespon
 }
 
 /**
+ * Move a product to another cart
+ */
+export async function moveProduct(
+  cartId: number,
+  productId: number,
+  targetCartId: number
+): Promise<ApiResponse<{ message: string }>> {
+  return apiRequest<{ message: string }>(`/carts/${cartId}/products/${productId}/move`, {
+    method: 'POST',
+    body: JSON.stringify({ targetCartId }),
+  });
+}
+
+/**
  * Export apiRequest for future use
  */
 export { apiRequest };

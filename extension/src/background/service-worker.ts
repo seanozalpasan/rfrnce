@@ -1,6 +1,6 @@
 // Background service worker for Rfrnce extension
 import { getOrCreateUserUuid, getActiveCartId, setActiveCartId } from '../shared/storage';
-import { initUser, getCarts, createCart, addProduct } from '../shared/api';
+import { initUser, getCarts, createCart, addProduct, moveProduct } from '../shared/api';
 
 console.log('Rfrnce background service worker loaded');
 
@@ -47,6 +47,41 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       .then(sendResponse)
       .catch((error) => {
         console.error('[Background] Error handling ADD_PRODUCT:', error);
+        sendResponse({
+          success: false,
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: error.message || 'Something went wrong. Please try again in a few minutes.',
+          },
+        });
+      });
+    return true; // Required for async response
+  }
+
+  // Handle GET_CARTS message
+  if (message.type === 'GET_CARTS') {
+    getCarts()
+      .then(sendResponse)
+      .catch((error) => {
+        console.error('[Background] Error handling GET_CARTS:', error);
+        sendResponse({
+          success: false,
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: error.message || 'Something went wrong. Please try again in a few minutes.',
+          },
+        });
+      });
+    return true; // Required for async response
+  }
+
+  // Handle MOVE_PRODUCT message
+  if (message.type === 'MOVE_PRODUCT') {
+    const { cartId, productId, targetCartId } = message.payload;
+    moveProduct(cartId, productId, targetCartId)
+      .then(sendResponse)
+      .catch((error) => {
+        console.error('[Background] Error handling MOVE_PRODUCT:', error);
         sendResponse({
           success: false,
           error: {

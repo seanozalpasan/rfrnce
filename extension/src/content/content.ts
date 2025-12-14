@@ -128,7 +128,10 @@ function injectOverlayButton() {
       // Show toast notification
       if (response.success) {
         const cartName = response.data.cartName || 'your cart';
-        showToast(`Added to ${cartName}`);
+        showToast(`Added to ${cartName}`, 'success', {
+          cartId: response.data.cartId,
+          productId: response.data.productId,
+        });
       } else {
         // Show error message from API
         const errorMessage = response.error?.message || 'Failed to add product';
@@ -162,7 +165,11 @@ function injectOverlayButton() {
 /**
  * Show a toast notification
  */
-function showToast(message: string, type: 'success' | 'error' = 'success') {
+function showToast(
+  message: string,
+  type: 'success' | 'error' = 'success',
+  options?: { cartId?: number; productId?: number }
+) {
   // Create host element for Shadow DOM
   const host = document.createElement('div');
   host.id = 'rfrnce-toast';
@@ -180,11 +187,14 @@ function showToast(message: string, type: 'success' | 'error' = 'success') {
       --color-status-success: #27ae60;
       --color-status-error: #c0392b;
       --color-accent-secondary: #4a90a4;
+      --radius-sm: 4px;
       --radius-md: 6px;
+      --spacing-xs: 4px;
       --spacing-sm: 8px;
       --spacing-md: 12px;
       --font-size-sm: 12px;
       --font-weight-normal: 400;
+      --font-weight-medium: 500;
     }
 
     /* Toast Container */
@@ -239,6 +249,35 @@ function showToast(message: string, type: 'success' | 'error' = 'success') {
     .toast-link:hover {
       text-decoration: underline;
     }
+
+    .toast-dropdown {
+      margin-top: var(--spacing-sm);
+      background: #1a1a1a;
+      border-radius: var(--radius-md);
+      padding: var(--spacing-sm);
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .cart-option {
+      padding: var(--spacing-sm);
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+    }
+
+    .cart-option:hover {
+      background: #3d3d3d;
+    }
+
+    .cart-option-name {
+      font-weight: var(--font-weight-medium);
+    }
+
+    .cart-option-count {
+      font-size: 11px;
+      color: #a0a0a0;
+      margin-left: var(--spacing-xs);
+    }
   `;
 
   // Create toast element
@@ -251,6 +290,131 @@ function showToast(message: string, type: 'success' | 'error' = 'success') {
 
   toast.appendChild(messageEl);
 
+  // Track change link for timeout cancellation
+  let changeLink: HTMLAnchorElement | null = null;
+  let dismissTimeout: number | null = null;
+
+  // Add "Change" link for success toasts with cart data
+  if (type === 'success' && options?.cartId && options?.productId) {
+    changeLink = document.createElement('a');
+    changeLink.className = 'toast-link';
+    changeLink.textContent = 'Change';
+    changeLink.href = '#';
+
+    // Container for dropdown
+    const dropdownContainer = document.createElement('div');
+    let dropdownVisible = false;
+
+    changeLink.addEventListener('click', async (e) => {
+      e.preventDefault();
+
+      if (dropdownVisible) {
+        // Hide dropdown
+        dropdownContainer.innerHTML = '';
+        dropdownContainer.style.display = 'none';
+        dropdownVisible = false;
+        return;
+      }
+
+      // Cancel auto-dismiss when dropdown is opened
+      if (dismissTimeout) {
+        clearTimeout(dismissTimeout);
+        dismissTimeout = null;
+        console.log('[Rfrnce] Auto-dismiss cancelled - dropdown open');
+      }
+
+      // Show loading
+      dropdownContainer.innerHTML = '<div style="padding: 8px; color: #a0a0a0;">Loading carts...</div>';
+      dropdownContainer.style.display = 'block';
+      dropdownVisible = true;
+
+      // Fetch all carts via background worker
+      const cartsResponse = await chrome.runtime.sendMessage({ type: 'GET_CARTS' });
+
+      if (!cartsResponse.success || cartsResponse.data.length === 0) {
+        dropdownContainer.innerHTML = '<div style="padding: 8px; color: #c0392b;">No other carts available</div>';
+        return;
+      }
+
+      // Filter out current cart
+      const otherCarts = cartsResponse.data.filter((c) => c.id !== options.cartId);
+
+      if (otherCarts.length === 0) {
+        dropdownContainer.innerHTML = '<div style="padding: 8px; color: #a0a0a0;">No other carts available</div>';
+        return;
+      }
+
+      // Build dropdown
+      const dropdown = document.createElement('div');
+      dropdown.className = 'toast-dropdown';
+
+      otherCarts.forEach((cart) => {
+        const option = document.createElement('div');
+        option.className = 'cart-option';
+
+        const nameSpan = document.createElement('span');
+        nameSpan.className = 'cart-option-name';
+        nameSpan.textContent = cart.name;
+
+        const countSpan = document.createElement('span');
+        countSpan.className = 'cart-option-count';
+        countSpan.textContent = `(${cart.productCount} items)`;
+
+        option.appendChild(nameSpan);
+        option.appendChild(countSpan);
+
+        // Click handler to move product
+        option.addEventListener('click', async () => {
+          // Show moving state
+          messageEl.textContent = 'Moving...';
+          dropdownContainer.innerHTML = '';
+          dropdownContainer.style.display = 'none';
+          dropdownVisible = false;
+
+          // Call move API via background worker
+          const moveResponse = await chrome.runtime.sendMessage({
+            type: 'MOVE_PRODUCT',
+            payload: {
+              cartId: options.cartId,
+              productId: options.productId,
+              targetCartId: cart.id,
+            },
+          });
+
+          if (moveResponse.success) {
+            messageEl.textContent = `✓ Moved to ${cart.name}`;
+            console.log(`[Rfrnce] Product moved to cart: ${cart.name}`);
+
+            // Dismiss after showing success message for 2 seconds
+            setTimeout(() => {
+              host.remove();
+              document.removeEventListener('click', handleClickOutside);
+              console.log('[Rfrnce] Toast dismissed after successful move');
+            }, 2000);
+          } else {
+            messageEl.textContent = moveResponse.error?.message || 'Failed to move product';
+            toast.className = 'toast error';
+            console.error('[Rfrnce] Failed to move product:', moveResponse.error);
+
+            // Dismiss error after 3 seconds
+            setTimeout(() => {
+              host.remove();
+              document.removeEventListener('click', handleClickOutside);
+            }, 3000);
+          }
+        });
+
+        dropdown.appendChild(option);
+      });
+
+      dropdownContainer.innerHTML = '';
+      dropdownContainer.appendChild(dropdown);
+    });
+
+    messageEl.appendChild(changeLink);
+    toast.appendChild(dropdownContainer);
+  }
+
   // Append styles and toast to shadow root
   shadow.appendChild(styles);
   shadow.appendChild(toast);
@@ -260,10 +424,26 @@ function showToast(message: string, type: 'success' | 'error' = 'success') {
 
   console.log(`[Rfrnce] Toast shown: ${message}`);
 
-  // Auto-dismiss after 3 seconds
+  // Dismiss when clicking outside the toast
+  const handleClickOutside = (e: MouseEvent) => {
+    if (!host.contains(e.target as Node)) {
+      host.remove();
+      document.removeEventListener('click', handleClickOutside);
+      if (dismissTimeout) clearTimeout(dismissTimeout);
+      console.log('[Rfrnce] Toast dismissed - clicked outside');
+    }
+  };
+
+  // Add listener after a brief delay to avoid immediate dismissal
   setTimeout(() => {
+    document.addEventListener('click', handleClickOutside);
+  }, 100);
+
+  // Auto-dismiss after 3 seconds (will be cancelled if Change link is clicked)
+  dismissTimeout = setTimeout(() => {
     host.remove();
-    console.log('[Rfrnce] Toast dismissed');
+    document.removeEventListener('click', handleClickOutside);
+    console.log('[Rfrnce] Toast dismissed - auto timeout');
   }, 3000);
 }
 
