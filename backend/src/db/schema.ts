@@ -10,7 +10,6 @@ export const carts = pgTable('carts', {
   id: serial('id').primaryKey(),
   userId: integer('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
   name: varchar('name', { length: 100 }).notNull().default('Unnamed Cart'),
-  isActive: boolean('is_active').notNull().default(false),
   reportCount: integer('report_count').notNull().default(0),
   isFrozen: boolean('is_frozen').notNull().default(false),
   createdAt: timestamp('created_at').notNull().defaultNow(),

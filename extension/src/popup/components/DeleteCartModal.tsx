@@ -6,33 +6,28 @@ interface DeleteCartModalProps {
   cartName: string;
   hasReports: boolean; // true if reportCount > 0
   onClose: () => void;
-  onSuccess: () => void;
+  onOptimisticDelete: (cartId: number) => void; // Called immediately for instant UI update
 }
 
-function DeleteCartModal({ cartId, cartName, hasReports, onClose, onSuccess }: DeleteCartModalProps) {
+function DeleteCartModal({ cartId, cartName, hasReports, onClose, onOptimisticDelete }: DeleteCartModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleDelete = async () => {
-    setError(null);
-    setLoading(true);
+    // Optimistic update - remove from UI immediately
+    onOptimisticDelete(cartId);
+    onClose();
 
+    // Delete from backend in background
     try {
       const response = await deleteCart(cartId);
 
-      if (response.success) {
-        // Success - refresh cart list and close modal
-        onSuccess();
-        onClose();
-      } else {
-        // Show error
-        setError(response.error.message);
+      if (!response.success) {
+        // Show error but don't rollback (cart already removed from UI)
+        console.error('Failed to delete cart from backend:', response.error.message);
       }
     } catch (err) {
-      setError('Failed to delete cart');
       console.error('Error deleting cart:', err);
-    } finally {
-      setLoading(false);
     }
   };
 

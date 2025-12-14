@@ -5,10 +5,11 @@ interface RenameCartModalProps {
   cartId: number;
   currentName: string;
   onClose: () => void;
-  onSuccess: () => void;
+  onOptimisticRename: (cartId: number, newName: string) => void;
+  onRenameComplete: (cartId: number, success: boolean, oldName: string) => void;
 }
 
-function RenameCartModal({ cartId, currentName, onClose, onSuccess }: RenameCartModalProps) {
+function RenameCartModal({ cartId, currentName, onClose, onOptimisticRename, onRenameComplete }: RenameCartModalProps) {
   const [cartName, setCartName] = useState(currentName);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -16,33 +17,35 @@ function RenameCartModal({ cartId, currentName, onClose, onSuccess }: RenameCart
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setLoading(true);
 
+    const name = cartName.trim();
+
+    // Validate name is not empty
+    if (!name) {
+      setError('Cart name cannot be empty');
+      return;
+    }
+
+    // Optimistic update - rename in UI immediately
+    onOptimisticRename(cartId, name);
+    onClose();
+
+    // Update in backend
     try {
-      const name = cartName.trim();
-
-      // Validate name is not empty
-      if (!name) {
-        setError('Cart name cannot be empty');
-        setLoading(false);
-        return;
-      }
-
       const response = await updateCart(cartId, { name });
 
       if (response.success) {
-        // Success - refresh cart list and close modal
-        onSuccess();
-        onClose();
+        // Success - notify completion
+        onRenameComplete(cartId, true, currentName);
       } else {
-        // Show error
-        setError(response.error.message);
+        // Revert to old name on error
+        onRenameComplete(cartId, false, currentName);
+        console.error('Failed to rename cart:', response.error.message);
       }
     } catch (err) {
-      setError('Failed to rename cart');
+      // Revert to old name on error
+      onRenameComplete(cartId, false, currentName);
       console.error('Error renaming cart:', err);
-    } finally {
-      setLoading(false);
     }
   };
 

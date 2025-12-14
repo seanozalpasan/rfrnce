@@ -14,7 +14,6 @@ export interface User {
 export interface Cart {
   id: number;
   name: string;
-  isActive: boolean;
   isFrozen: boolean;
   reportCount: number;
   productCount: number; // Returned from API (count from backend)
@@ -116,7 +115,6 @@ export interface CreateCartPayload {
 
 export interface UpdateCartPayload {
   name?: string;
-  isActive?: boolean;
 }
 
 export interface AddProductPayload {

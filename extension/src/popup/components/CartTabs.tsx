@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getCarts, updateCart } from '../../shared/api';
-import { getActiveCartId, setActiveCartId as setActiveCartIdStorage } from '../../shared/storage';
+import { getActiveCartId, setActiveCartId as setActiveCartIdStorage, clearActiveCartId } from '../../shared/storage';
 import type { Cart } from '../../shared/types';
 import AddCartModal from './AddCartModal';
 import RenameCartModal from './RenameCartModal';
@@ -44,8 +44,9 @@ function CartTabs() {
           const firstCartId = response.data[0].id;
           await handleSetActive(firstCartId);
         } else {
-          // No carts
+          // No carts - clear both state and storage
           setActiveCartId(null);
+          await clearActiveCartId();
         }
       } else {
         setError(response.error.message);
@@ -59,24 +60,10 @@ function CartTabs() {
   };
 
   const handleSetActive = async (cartId: number) => {
-    try {
-      // Update cart to active in backend
-      const response = await updateCart(cartId, { isActive: true });
-
-      if (response.success) {
-        // Update local state
-        setActiveCartId(cartId);
-        setCarts(carts.map(c => ({ ...c, isActive: c.id === cartId })));
-
-        // Store in chrome.storage
-        await setActiveCartIdStorage(cartId);
-      } else {
-        setError(response.error.message);
-      }
-    } catch (err) {
-      setError('Failed to set active cart');
-      console.error('Error setting active cart:', err);
-    }
+    // Optimistic update - instant UI feedback
+    setActiveCartId(cartId);
+    await setActiveCartIdStorage(cartId);
+    // No backend sync needed - active cart is tracked client-side only
   };
 
   if (loading) {
@@ -104,8 +91,24 @@ function CartTabs() {
         {showAddModal && (
           <AddCartModal
             onClose={() => setShowAddModal(false)}
-            onSuccess={() => {
-              loadCarts(); // Refresh cart list
+            onOptimisticCreate={(tempCart) => {
+              // Add temporary cart to UI immediately
+              setCarts([tempCart]);
+              // Set as active cart
+              handleSetActive(tempCart.id);
+            }}
+            onCreateComplete={(tempId, realCart) => {
+              if (realCart) {
+                // Replace temp cart with real cart from backend
+                setCarts([realCart]);
+                // Update active cart ID
+                handleSetActive(realCart.id);
+              } else {
+                // Remove temp cart on error
+                setCarts([]);
+                setActiveCartId(null);
+                clearActiveCartId();
+              }
             }}
           />
         )}
@@ -161,8 +164,34 @@ function CartTabs() {
       {showAddModal && (
         <AddCartModal
           onClose={() => setShowAddModal(false)}
-          onSuccess={() => {
-            loadCarts(); // Refresh cart list
+          onOptimisticCreate={(tempCart) => {
+            // Add temporary cart to UI immediately
+            setCarts(prevCarts => [...prevCarts, tempCart]);
+            // Set as active cart
+            handleSetActive(tempCart.id);
+          }}
+          onCreateComplete={(tempId, realCart) => {
+            if (realCart) {
+              // Replace temp cart with real cart from backend
+              setCarts(prevCarts => prevCarts.map(c => c.id === tempId ? realCart : c));
+              // Always set newly created cart as active
+              handleSetActive(realCart.id);
+            } else {
+              // Remove temp cart on error
+              setCarts(prevCarts => {
+                const updatedCarts = prevCarts.filter(c => c.id !== tempId);
+                // Handle active cart logic
+                if (activeCartId === tempId) {
+                  if (updatedCarts.length > 0) {
+                    handleSetActive(updatedCarts[0].id);
+                  } else {
+                    setActiveCartId(null);
+                    clearActiveCartId();
+                  }
+                }
+                return updatedCarts;
+              });
+            }
           }}
         />
       )}
@@ -173,8 +202,16 @@ function CartTabs() {
           cartId={renameCart.id}
           currentName={renameCart.name}
           onClose={() => setRenameCart(null)}
-          onSuccess={() => {
-            loadCarts(); // Refresh cart list
+          onOptimisticRename={(cartId, newName) => {
+            // Update cart name in UI immediately
+            setCarts(prevCarts => prevCarts.map(c => c.id === cartId ? { ...c, name: newName } : c));
+          }}
+          onRenameComplete={(cartId, success, oldName) => {
+            if (!success) {
+              // Revert to old name if backend update failed
+              setCarts(prevCarts => prevCarts.map(c => c.id === cartId ? { ...c, name: oldName } : c));
+            }
+            // On success, cart name is already updated from optimistic update
           }}
         />
       )}
@@ -186,8 +223,23 @@ function CartTabs() {
           cartName={deleteCartData.name}
           hasReports={deleteCartData.reportCount > 0}
           onClose={() => setDeleteCartData(null)}
-          onSuccess={() => {
-            loadCarts(); // Refresh cart list
+          onOptimisticDelete={(deletedCartId) => {
+            // Remove cart from local state immediately
+            setCarts(prevCarts => {
+              const updatedCarts = prevCarts.filter(c => c.id !== deletedCartId);
+
+              // If deleted cart was active, set first remaining cart as active
+              if (deletedCartId === activeCartId) {
+                if (updatedCarts.length > 0) {
+                  handleSetActive(updatedCarts[0].id);
+                } else {
+                  setActiveCartId(null);
+                  clearActiveCartId();
+                }
+              }
+
+              return updatedCarts;
+            });
           }}
         />
       )}

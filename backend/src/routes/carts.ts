@@ -15,7 +15,6 @@ app.get('/', async (c) => {
       .select({
         id: carts.id,
         name: carts.name,
-        isActive: carts.isActive,
         isFrozen: carts.isFrozen,
         reportCount: carts.reportCount,
         createdAt: carts.createdAt,
@@ -99,7 +98,6 @@ app.post('/', async (c) => {
       .values({
         userId,
         name,
-        isActive: false,
         reportCount: 0,
         isFrozen: false,
       })
@@ -127,13 +125,13 @@ app.post('/', async (c) => {
   }
 });
 
-// PATCH /api/carts/:id - Update cart (rename or set active)
+// PATCH /api/carts/:id - Update cart (rename)
 app.patch('/:id', async (c) => {
   try {
     const userId = c.get('userId');
     const cartId = parseInt(c.req.param('id'));
     const body = await c.req.json();
-    const { name, isActive } = body;
+    const { name } = body;
 
     // Verify cart belongs to user
     const cart = await db
@@ -177,18 +175,9 @@ app.patch('/:id', async (c) => {
       }
     }
 
-    // If setting active, deactivate all other carts first
-    if (isActive === true) {
-      await db
-        .update(carts)
-        .set({ isActive: false })
-        .where(eq(carts.userId, userId));
-    }
-
     // Update cart
     const updates: any = { updatedAt: new Date() };
     if (name !== undefined) updates.name = name;
-    if (isActive !== undefined) updates.isActive = isActive;
 
     const updatedCart = await db
       .update(carts)

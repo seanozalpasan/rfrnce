@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { createCart } from '../../shared/api';
+import type { Cart } from '../../shared/types';
 
 interface AddCartModalProps {
   onClose: () => void;
-  onSuccess: () => void;
+  onOptimisticCreate: (tempCart: Cart) => void;
+  onCreateComplete: (tempId: number, realCart: Cart | null) => void;
 }
 
-function AddCartModal({ onClose, onSuccess }: AddCartModalProps) {
+function AddCartModal({ onClose, onOptimisticCreate, onCreateComplete }: AddCartModalProps) {
   const [cartName, setCartName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -14,25 +16,41 @@ function AddCartModal({ onClose, onSuccess }: AddCartModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    setLoading(true);
 
+    const name = cartName.trim() || 'Unnamed Cart';
+
+    // Create temporary cart for optimistic update
+    const tempId = -Date.now(); // Negative ID to distinguish from real carts
+    const tempCart: Cart = {
+      id: tempId,
+      name,
+      isFrozen: false,
+      reportCount: 0,
+      productCount: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    // Optimistic update - add to UI immediately
+    onOptimisticCreate(tempCart);
+    onClose();
+
+    // Create cart in backend
     try {
-      const name = cartName.trim() || 'Unnamed Cart';
       const response = await createCart({ name });
 
       if (response.success) {
-        // Success - refresh cart list and close modal
-        onSuccess();
-        onClose();
+        // Replace temp cart with real cart
+        onCreateComplete(tempId, response.data);
       } else {
-        // Show error
-        setError(response.error.message);
+        // Remove temp cart and show error
+        onCreateComplete(tempId, null);
+        console.error('Failed to create cart:', response.error.message);
       }
     } catch (err) {
-      setError('Failed to create cart');
+      // Remove temp cart on error
+      onCreateComplete(tempId, null);
       console.error('Error creating cart:', err);
-    } finally {
-      setLoading(false);
     }
   };
 
