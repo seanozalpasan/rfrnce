@@ -98,6 +98,43 @@ function injectOverlayButton() {
   // Set initial state based on product page detection
   button.disabled = !isProduct;
 
+  // Add click handler
+  button.addEventListener('click', async () => {
+    if (!isProduct) return; // Safety check
+
+    // Show loading state
+    const originalText = button.textContent;
+    button.disabled = true;
+    button.textContent = 'Adding...';
+
+    try {
+      // Get current page URL
+      const url = window.location.href;
+
+      console.log(`[Rfrnce] Sending ADD_PRODUCT message with URL: ${url}`);
+
+      // Send message to background worker
+      const response = await chrome.runtime.sendMessage({
+        type: 'ADD_PRODUCT',
+        payload: { url }
+      });
+
+      console.log('[Rfrnce] Response from background worker:', response);
+
+      // Reset button state
+      button.textContent = originalText;
+      button.disabled = false;
+
+    } catch (error) {
+      console.error('[Rfrnce] Error adding product:', error);
+      button.textContent = 'Error';
+      setTimeout(() => {
+        button.textContent = originalText;
+        button.disabled = false;
+      }, 2000);
+    }
+  });
+
   // Append styles and button to shadow root
   shadow.appendChild(styles);
   shadow.appendChild(button);
@@ -106,8 +143,6 @@ function injectOverlayButton() {
   document.body.appendChild(host);
 
   console.log(`[Rfrnce] Overlay button injected (enabled: ${isProduct})`);
-
-  // TODO: Add click handler (Task 4.5)
 }
 
 // Run detection on page load

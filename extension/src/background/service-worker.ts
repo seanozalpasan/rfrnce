@@ -37,9 +37,57 @@ chrome.runtime.onStartup.addListener(async () => {
   }
 });
 
-// Message listener - will handle messages from content script
+// Message listener - handle messages from content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log('Message received:', message);
-  // TODO: Handle messages
-  return true; // Required for async response
+  console.log('[Background] Message received:', message);
+
+  // Handle ADD_PRODUCT message
+  if (message.type === 'ADD_PRODUCT') {
+    handleAddProduct(message.payload.url)
+      .then(sendResponse)
+      .catch((error) => {
+        console.error('[Background] Error handling ADD_PRODUCT:', error);
+        sendResponse({
+          success: false,
+          error: {
+            code: 'INTERNAL_ERROR',
+            message: error.message || 'Something went wrong. Please try again in a few minutes.',
+          },
+        });
+      });
+    return true; // Required for async response
+  }
+
+  // Unknown message type
+  console.warn('[Background] Unknown message type:', message.type);
+  sendResponse({
+    success: false,
+    error: {
+      code: 'UNKNOWN_MESSAGE_TYPE',
+      message: 'Unknown message type',
+    },
+  });
+  return true;
 });
+
+/**
+ * Handle adding a product to the active cart
+ * For now, just logs the URL - full implementation in Task 4.6
+ */
+async function handleAddProduct(url: string) {
+  console.log(`[Background] ADD_PRODUCT called with URL: ${url}`);
+
+  // TODO (Task 4.6): Get active cart from storage
+  // TODO (Task 4.6): Call POST /api/carts/:id/products
+  // TODO (Task 4.6): If no carts exist, create default cart first
+  // TODO (Task 4.6): Return cart name for toast notification
+
+  // For now, just return success
+  return {
+    success: true,
+    data: {
+      message: 'Product URL received (not yet saved)',
+      url,
+    },
+  };
+}
