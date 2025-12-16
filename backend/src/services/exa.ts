@@ -1,4 +1,5 @@
 import Exa from 'exa-js';
+import 'dotenv/config';
 
 const EXA_TIMEOUT = 180000; // 3 minutes
 
