@@ -2,8 +2,81 @@ import { Hono } from 'hono';
 import { db } from '../db/index.js';
 import { carts, products } from '../db/schema.js';
 import { eq, and, sql } from 'drizzle-orm';
+import { extractProductData } from '../services/firecrawl.js';
+import { searchReviews } from '../services/exa.js';
 
 const app = new Hono();
+
+/**
+ * Async scraping job - runs in background after product is created
+ * Extracts product data with Firecrawl, then searches reviews with Exa
+ */
+async function scrapeProductData(productId: number, url: string) {
+  try {
+    console.log(`[Scraping] Starting for product ${productId}: ${url}`);
+
+    // Step 1: Extract product data with Firecrawl
+    let productData;
+    try {
+      productData = await extractProductData(url);
+    } catch (error) {
+      // Firecrawl timeout or error - mark product as failed
+      console.error(`[Scraping] Firecrawl failed for product ${productId}:`, error);
+      await db
+        .update(products)
+        .set({ status: 'failed' })
+        .where(eq(products.id, productId));
+      return;
+    }
+
+    // Step 2: Validate Firecrawl results
+    if (!productData || !productData.name || !productData.price) {
+      // Missing required fields - mark as failed
+      console.log(`[Scraping] Product ${productId} missing required fields (name or price)`);
+      await db
+        .update(products)
+        .set({ status: 'failed' })
+        .where(eq(products.id, productId));
+      return;
+    }
+
+    // Step 3: Search for reviews with Exa
+    let reviews = [];
+    try {
+      reviews = await searchReviews(productData.name);
+      console.log(`[Scraping] Found ${reviews.length} reviews for product ${productId}`);
+    } catch (error) {
+      // Exa timeout or error - continue with empty reviews (graceful degradation)
+      console.error(`[Scraping] Exa failed for product ${productId}, continuing with empty reviews:`, error);
+      reviews = [];
+    }
+
+    // Step 4: Update product with all extracted data
+    await db
+      .update(products)
+      .set({
+        status: 'complete',
+        name: productData.name,
+        price: productData.price,
+        brand: productData.brand || null,
+        color: productData.color || null,
+        dimensions: productData.dimensions || null,
+        description: productData.description || null,
+        reviewsJson: reviews.length > 0 ? reviews : null,
+        scrapedAt: new Date(),
+      })
+      .where(eq(products.id, productId));
+
+    console.log(`[Scraping] Successfully completed for product ${productId}`);
+  } catch (error) {
+    // Unexpected error - mark as failed
+    console.error(`[Scraping] Unexpected error for product ${productId}:`, error);
+    await db
+      .update(products)
+      .set({ status: 'failed' })
+      .where(eq(products.id, productId));
+  }
+}
 
 // GET /api/carts/:id/products - Get all products for a cart
 app.get('/carts/:id/products', async (c) => {
@@ -161,8 +234,11 @@ app.post('/carts/:id/products', async (c) => {
       })
       .returning();
 
-    // TODO: Spawn async scraping task here (Phase 5)
-    // For now, just return the product with pending status
+    // Spawn async scraping task (fire-and-forget)
+    // This runs in the background after the response is sent
+    scrapeProductData(newProduct[0].id, url).catch((error) => {
+      console.error(`[Scraping] Background job failed for product ${newProduct[0].id}:`, error);
+    });
 
     return c.json({
       success: true,
