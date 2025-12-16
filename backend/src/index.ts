@@ -5,6 +5,7 @@ import { authMiddleware } from './middleware/auth.js';
 import usersRouter from './routes/users.js';
 import cartsRouter from './routes/carts.js';
 import productsRouter from './routes/products.js';
+import reportsRouter from './routes/reports.js';
 
 const app = new Hono();
 
@@ -39,7 +40,7 @@ app.use('/api/reports/*', authMiddleware);
 // Register protected routes
 app.route('/api/carts', cartsRouter);
 app.route('/api', productsRouter); // Products routes are nested under /api/carts/:id/products
-// app.route('/api/reports', reportsRouter);   // TODO: Implement in Phase 6
+app.route('/api/carts', reportsRouter); // Reports routes are nested under /api/carts/:id/report
 
 // For local development with Node.js server
 const port = 3000;

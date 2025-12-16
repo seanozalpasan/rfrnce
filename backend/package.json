@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@hono/node-server": "^1.19.7",
     "@mendable/firecrawl-js": "^4.9.0",
     "@neondatabase/serverless": "^1.0.2",
