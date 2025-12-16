@@ -353,3 +353,108 @@ body {
   border-color: var(--color-accent-secondary);
   color: var(--color-accent-secondary);
 }
+
+/* Product List */
+.product-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.product-item {
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  transition: opacity 0.2s ease;
+}
+
+.product-item.pending {
+  opacity: 0.6;
+}
+
+.product-status {
+  flex-shrink: 0;
+}
+
+.status-icon {
+  font-size: var(--font-size-base);
+  display: inline-block;
+}
+
+.status-pending {
+  color: var(--color-status-pending);
+}
+
+.status-failed {
+  color: var(--color-status-error);
+}
+
+.status-complete {
+  color: var(--color-status-success);
+  font-size: var(--font-size-sm);
+}
+
+.product-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+  min-width: 0; /* Needed for text truncation */
+}
+
+.product-name {
+  font-size: var(--font-size-base);
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-price {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.product-delete {
+  background: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.product-delete:hover {
+  background: rgba(192, 57, 43, 0.1);
+  color: var(--color-status-error);
+}
+
+/* Product List States */
+.product-list-empty,
+.product-list-loading,
+.product-list-error {
+  padding: var(--spacing-xl);
+  text-align: center;
+}
+
+.product-list-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.text-error {
+  color: var(--color-status-error);
+  font-size: var(--font-size-sm);
+}

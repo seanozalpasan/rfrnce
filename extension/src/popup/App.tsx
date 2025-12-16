@@ -1,7 +1,16 @@
-import React from 'react';
+import React, { useState } from 'react';
 import CartTabs from './components/CartTabs';
+import ProductList from './components/ProductList';
 
 function App() {
+  const [activeCartId, setActiveCartId] = useState<number | null>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  // Callback to refresh cart list when products change (to update product counts)
+  const handleProductsChange = () => {
+    setRefreshKey((prev) => prev + 1);
+  };
+
   return (
     <div className="app">
       {/* Header */}
@@ -12,11 +21,14 @@ function App() {
       {/* Main Content */}
       <main className="main-content">
         {/* Cart tabs */}
-        <CartTabs />
+        <CartTabs
+          activeCartId={activeCartId}
+          onActiveCartChange={setActiveCartId}
+          refreshKey={refreshKey}
+        />
 
-        {/* Add Cart button will go here (Task 3.4) */}
-        {/* Product list will go here (Task 4.9) */}
-        <p className="text-secondary">Select a cart to view products.</p>
+        {/* Product list */}
+        <ProductList activeCartId={activeCartId} onProductsChange={handleProductsChange} />
       </main>
 
       {/* Footer - Report Buttons */}

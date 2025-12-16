@@ -6,9 +6,14 @@ import AddCartModal from './AddCartModal';
 import RenameCartModal from './RenameCartModal';
 import DeleteCartModal from './DeleteCartModal';
 
-function CartTabs() {
+interface CartTabsProps {
+  activeCartId: number | null;
+  onActiveCartChange: (cartId: number | null) => void;
+  refreshKey: number; // Used to trigger refresh when products change
+}
+
+function CartTabs({ activeCartId, onActiveCartChange, refreshKey }: CartTabsProps) {
   const [carts, setCarts] = useState<Cart[]>([]);
-  const [activeCartId, setActiveCartId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -19,6 +24,13 @@ function CartTabs() {
   useEffect(() => {
     loadCarts();
   }, []);
+
+  // Refresh carts when refreshKey changes (e.g., when products are added/removed)
+  useEffect(() => {
+    if (refreshKey > 0) {
+      loadCarts();
+    }
+  }, [refreshKey]);
 
   const loadCarts = async () => {
     setLoading(true);
@@ -38,14 +50,14 @@ function CartTabs() {
         const storedCartExists = response.data.find(c => c.id === storedActiveId);
 
         if (storedCartExists) {
-          setActiveCartId(storedActiveId);
+          onActiveCartChange(storedActiveId);
         } else if (response.data.length > 0) {
           // If no stored cart or stored cart doesn't exist, activate first cart
           const firstCartId = response.data[0].id;
           await handleSetActive(firstCartId);
         } else {
           // No carts - clear both state and storage
-          setActiveCartId(null);
+          onActiveCartChange(null);
           await clearActiveCartId();
         }
       } else {
@@ -61,7 +73,7 @@ function CartTabs() {
 
   const handleSetActive = async (cartId: number) => {
     // Optimistic update - instant UI feedback
-    setActiveCartId(cartId);
+    onActiveCartChange(cartId);
     await setActiveCartIdStorage(cartId);
     // No backend sync needed - active cart is tracked client-side only
   };
@@ -106,7 +118,7 @@ function CartTabs() {
               } else {
                 // Remove temp cart on error
                 setCarts([]);
-                setActiveCartId(null);
+                onActiveCartChange(null);
                 clearActiveCartId();
               }
             }}
@@ -185,7 +197,7 @@ function CartTabs() {
                   if (updatedCarts.length > 0) {
                     handleSetActive(updatedCarts[0].id);
                   } else {
-                    setActiveCartId(null);
+                    onActiveCartChange(null);
                     clearActiveCartId();
                   }
                 }
@@ -233,7 +245,7 @@ function CartTabs() {
                 if (updatedCarts.length > 0) {
                   handleSetActive(updatedCarts[0].id);
                 } else {
-                  setActiveCartId(null);
+                  onActiveCartChange(null);
                   clearActiveCartId();
                 }
               }

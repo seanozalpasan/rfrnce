@@ -107,6 +107,24 @@ export async function addProduct(cartId: number, url: string): Promise<ApiRespon
 }
 
 /**
+ * Get all products for a cart
+ */
+export async function getProducts(cartId: number): Promise<ApiResponse<Product[]>> {
+  return apiRequest<Product[]>(`/carts/${cartId}/products`, {
+    method: 'GET',
+  });
+}
+
+/**
+ * Delete a product from a cart
+ */
+export async function deleteProduct(cartId: number, productId: number): Promise<ApiResponse<{ message: string }>> {
+  return apiRequest<{ message: string }>(`/carts/${cartId}/products/${productId}`, {
+    method: 'DELETE',
+  });
+}
+
+/**
  * Move a product to another cart
  */
 export async function moveProduct(
