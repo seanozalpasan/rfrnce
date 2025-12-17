@@ -5,6 +5,7 @@ import type { Cart } from '../../shared/types';
 import AddCartModal from './AddCartModal';
 import RenameCartModal from './RenameCartModal';
 import DeleteCartModal from './DeleteCartModal';
+import Spinner from './Spinner';
 
 interface CartTabsProps {
   activeCartId: number | null;
@@ -80,7 +81,7 @@ function CartTabs({ activeCartId, onActiveCartChange, refreshKey }: CartTabsProp
 
   if (loading) {
     return <div className="cart-tabs-container">
-      <p className="text-secondary">Loading carts...</p>
+      <Spinner size="small" text="Loading carts..." />
     </div>;
   }
 

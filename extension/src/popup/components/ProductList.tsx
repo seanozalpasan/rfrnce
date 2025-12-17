@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { getProducts, deleteProduct } from '../../shared/api';
 import type { Product } from '../../shared/types';
+import Spinner from './Spinner';
 
 interface ProductListProps {
   activeCartId: number | null;
@@ -42,22 +43,28 @@ function ProductList({ activeCartId, onProductsChange }: ProductListProps) {
   const handleDelete = async (productId: number) => {
     if (!activeCartId) return;
 
-    // Confirm deletion
-    if (!confirm('Are you sure you want to remove this product?')) {
-      return;
+    // Optimistic delete - remove from UI immediately
+    const productToDelete = products.find(p => p.id === productId);
+    if (!productToDelete) return;
+
+    setProducts(products.filter((p) => p.id !== productId));
+
+    // Notify parent to refresh cart list (product count changed)
+    if (onProductsChange) {
+      onProductsChange();
     }
 
+    // Delete from backend
     const response = await deleteProduct(activeCartId, productId);
 
-    if (response.success) {
-      // Remove from local state
-      setProducts(products.filter((p) => p.id !== productId));
-      // Notify parent to refresh cart list (product count changed)
+    if (!response.success) {
+      // Restore product on error
+      setProducts(prevProducts => [...prevProducts, productToDelete].sort((a, b) => a.id - b.id));
+      setError(response.error.message);
+      // Notify parent to refresh again
       if (onProductsChange) {
         onProductsChange();
       }
-    } else {
-      alert(response.error.message);
     }
   };
 
@@ -84,7 +91,7 @@ function ProductList({ activeCartId, onProductsChange }: ProductListProps) {
   if (!activeCartId) {
     return (
       <div className="product-list-empty">
-        <p className="text-secondary">Select a cart to view products.</p>
+        <p className="text-secondary">Create a cart to start adding products</p>
       </div>
     );
   }
@@ -93,7 +100,7 @@ function ProductList({ activeCartId, onProductsChange }: ProductListProps) {
   if (loading) {
     return (
       <div className="product-list-loading">
-        <p className="text-secondary">Loading products...</p>
+        <Spinner size="small" text="Loading products..." />
       </div>
     );
   }
@@ -114,7 +121,12 @@ function ProductList({ activeCartId, onProductsChange }: ProductListProps) {
   if (products.length === 0) {
     return (
       <div className="product-list-empty">
-        <p className="text-secondary">No products yet. Add products from retail sites.</p>
+        <p className="text-secondary" style={{ marginBottom: 'var(--spacing-xs)' }}>
+          No products yet
+        </p>
+        <p className="text-secondary" style={{ fontSize: 'var(--font-size-xs)' }}>
+          Visit a product page on Amazon, Walmart, Best Buy, Target, eBay, or Newegg and click "Add to Rfrnce"
+        </p>
       </div>
     );
   }

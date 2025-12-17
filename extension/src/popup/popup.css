@@ -221,6 +221,9 @@ body {
   cursor: pointer;
   white-space: nowrap;
   transition: background-color 0.2s ease, color 0.2s ease;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .cart-tab:hover:not(:disabled):not(.active) {
@@ -482,4 +485,37 @@ body {
 .text-error {
   color: var(--color-status-error);
   font-size: var(--font-size-sm);
+}
+
+/* Spinner Component */
+.spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-lg);
+}
+
+.spinner-container.spinner-small {
+  padding: var(--spacing-sm);
+}
+
+.spinner-container.spinner-large {
+  padding: var(--spacing-xl);
+}
+
+.spinner-text {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-xs);
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }

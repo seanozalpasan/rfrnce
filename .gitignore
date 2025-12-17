@@ -27,3 +27,6 @@ frontend/.env
 # Temporary files
 *.log
 .tmp/
+
+# Misc
+*.png
