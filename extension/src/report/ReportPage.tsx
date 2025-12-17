@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
+import html2pdf from 'html2pdf.js';
 import { generateReport, getReport } from '../shared/api';
 
 function ReportPage() {
@@ -9,6 +10,8 @@ function ReportPage() {
   const [error, setError] = useState<string | null>(null);
   const [reportContent, setReportContent] = useState<string | null>(null);
   const [reportGeneratedAt, setReportGeneratedAt] = useState<string | null>(null);
+  const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Read mode and cartId from URL parameters
@@ -99,6 +102,30 @@ function ReportPage() {
     }
   };
 
+  // Download report as PDF
+  const handleDownloadPDF = async () => {
+    if (!reportRef.current) return;
+
+    setDownloadingPdf(true);
+
+    try {
+      const options = {
+        margin: 0.5,
+        filename: `rfrnce-report-${cartId}-${new Date().toISOString().split('T')[0]}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2 },
+        jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' },
+      };
+
+      await html2pdf().set(options).from(reportRef.current).save();
+    } catch (err) {
+      console.error('Error generating PDF:', err);
+      alert('Failed to generate PDF. Please try again.');
+    } finally {
+      setDownloadingPdf(false);
+    }
+  };
+
   // Show initial loading while parsing URL
   if (loading && !mode) {
     return (
@@ -174,9 +201,18 @@ function ReportPage() {
     <div className="report-container">
       <div className="report-header">
         <h1>Rfrnce</h1>
-        <button className="btn-close" onClick={handleClose}>
-          Close Tab
-        </button>
+        <div className="header-actions">
+          <button
+            className="btn btn-primary"
+            onClick={handleDownloadPDF}
+            disabled={downloadingPdf}
+          >
+            {downloadingPdf ? 'Generating PDF...' : 'Download PDF'}
+          </button>
+          <button className="btn-close" onClick={handleClose}>
+            Close Tab
+          </button>
+        </div>
       </div>
       <div className="report-content">
         {reportGeneratedAt && (
@@ -185,6 +221,7 @@ function ReportPage() {
           </p>
         )}
         <div
+          ref={reportRef}
           className="report-display"
           dangerouslySetInnerHTML={{ __html: reportContent || '' }}
         />

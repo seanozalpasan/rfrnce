@@ -80,6 +80,12 @@ body {
   margin: 0;
 }
 
+.header-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  align-items: center;
+}
+
 .btn-close {
   background: transparent;
   border: 1px solid var(--color-border);
