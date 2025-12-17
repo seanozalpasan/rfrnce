@@ -6,12 +6,59 @@
  */
 
 export const RETAILER_WHITELIST: Record<string, RegExp> = {
+  // Original retailers
   'www.amazon.com': /\/(dp|gp\/product)\//,
   'www.walmart.com': /\/ip\//,
   'www.bestbuy.com': /\.p\?/,
   'www.target.com': /\/-\/A-/,
   'www.ebay.com': /\/itm\//,
   'www.newegg.com': /\/p\//,
+
+  // Home improvement
+  'www.homedepot.com': /\/p\//,
+  'www.lowes.com': /\/pd\//,
+
+  // Specialty retailers
+  'www.etsy.com': /\/listing\//,
+  'www.wayfair.com': /\/pdp\//,
+  'www.costco.com': /\/p\/-\//,
+  'www.aliexpress.us': /\/item\//,
+  'www.bhphotovideo.com': /\/c\/product\//,
+
+  // Apparel & sporting goods
+  'www.nike.com': /\/t\//,
+  'www.adidas.com': /\.html/,
+  'www.dickssportinggoods.com': /\/p\//,
+  'www.urbanoutfitters.com': /\/shop\/[^\/]+/,  // /shop/ followed by product slug
+  'www.depop.com': /\/products\//,
+  'www.forever21.com': /\/products\//,
+  'www.hollisterco.com': /\/shop\/us\/p\//,
+
+  // Beauty & cosmetics
+  'www.sephora.com': /\/product\//,
+  'www.ulta.com': /\/p\//,
+
+  // Fashion
+  'www.aritzia.com': /\/product\//,
+  'www.glossier.com': /\/products\/[^\/]+\?variant=/,
+  'www.uniqlo.com': /\/products\//,
+  'www.fashionnova.com': /\/products\//,
+  'www.elfcosmetics.com': /\/[0-9]+\.html/,
+  'shop.lululemon.com': /\/p\//,
+  'www2.hm.com': /\/productpage\.[0-9]+\.html/,
+  'us.brandymelville.com': /\/products\//,
+  'www.gap.com': /\/product\.do\?pid=/,
+  'oldnavy.gap.com': /\/product\.do\?pid=/,
+  'www.zalando.co.uk': /\.html$/,
+  'www.vinted.com': /\/items\/[0-9]+/,
+
+  // Outdoor & sporting
+  'www.osprey.com': /\?size=/,
+  'www.deuter.com': /\/p[0-9]+-/,
+  'www.thenorthface.com': /\/p\//,
+  'www.carhartt.com': /\/product\/[0-9]+\//,
+  'www.levi.com': /\/p\//,
+  'www.pacsun.com': /[0-9]+\.html/,
 };
 
 /**

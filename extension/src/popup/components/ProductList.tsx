@@ -125,7 +125,7 @@ function ProductList({ activeCartId, onProductsChange }: ProductListProps) {
           No products yet
         </p>
         <p className="text-secondary" style={{ fontSize: 'var(--font-size-xs)' }}>
-          Visit a product page on Amazon, Walmart, Best Buy, Target, eBay, or Newegg and click "Add to Rfrnce"
+          Visit any product page on 40 supported retailers and click "Add to Rfrnce"
         </p>
       </div>
     );

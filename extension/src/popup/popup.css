@@ -236,8 +236,8 @@ body {
 }
 
 .cart-tab.frozen {
-  opacity: 0.6;
-  cursor: not-allowed;
+  opacity: 0.7;
+  /* Frozen carts are still clickable (view-only mode) */
 }
 
 .cart-tab:disabled {

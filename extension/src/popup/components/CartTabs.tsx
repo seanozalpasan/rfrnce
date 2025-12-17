@@ -137,7 +137,6 @@ function CartTabs({ activeCartId, onActiveCartChange, refreshKey }: CartTabsProp
             <button
               className={`cart-tab ${cart.id === activeCartId ? 'active' : ''} ${cart.isFrozen ? 'frozen' : ''}`}
               onClick={() => handleSetActive(cart.id)}
-              disabled={cart.isFrozen}
             >
               {cart.name}
               {cart.isFrozen && ' 🔒'}
