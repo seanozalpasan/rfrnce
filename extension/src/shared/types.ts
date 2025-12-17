@@ -131,6 +131,8 @@ export interface MoveProductPayload {
 
 export interface GenerateReportResponse {
   content: string; // HTML/Markdown content
+  reportCount: number;
+  isFrozen: boolean;
 }
 
 export interface GetReportResponse {

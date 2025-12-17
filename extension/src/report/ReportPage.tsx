@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
 import html2pdf from 'html2pdf.js';
 import { generateReport, getReport } from '../shared/api';
+import FrozenCartDialog from './FrozenCartDialog';
 
 function ReportPage() {
   const [mode, setMode] = useState<'generate' | 'view' | null>(null);
@@ -11,6 +12,7 @@ function ReportPage() {
   const [reportContent, setReportContent] = useState<string | null>(null);
   const [reportGeneratedAt, setReportGeneratedAt] = useState<string | null>(null);
   const [downloadingPdf, setDownloadingPdf] = useState(false);
+  const [showFrozenDialog, setShowFrozenDialog] = useState(false);
   const reportRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -74,6 +76,11 @@ function ReportPage() {
         if ('generatedAt' in response.data) {
           setReportGeneratedAt(response.data.generatedAt);
         }
+
+        // Check if cart is now frozen (only for generate mode)
+        if (fetchMode === 'generate' && 'isFrozen' in response.data && response.data.isFrozen) {
+          setShowFrozenDialog(true);
+        }
       } else {
         // Handle API errors with user-friendly messages
         setError(response.error.message);
@@ -124,6 +131,21 @@ function ReportPage() {
     } finally {
       setDownloadingPdf(false);
     }
+  };
+
+  // Handle keeping frozen cart
+  const handleKeepFrozenCart = () => {
+    setShowFrozenDialog(false);
+  };
+
+  // Handle deleting frozen cart
+  const handleDeleteFrozenCart = () => {
+    // Close the report tab
+    chrome.tabs.getCurrent((tab) => {
+      if (tab?.id) {
+        chrome.tabs.remove(tab.id);
+      }
+    });
   };
 
   // Show initial loading while parsing URL
@@ -198,35 +220,46 @@ function ReportPage() {
 
   // Show report content
   return (
-    <div className="report-container">
-      <div className="report-header">
-        <h1>Rfrnce</h1>
-        <div className="header-actions">
-          <button
-            className="btn btn-primary"
-            onClick={handleDownloadPDF}
-            disabled={downloadingPdf}
-          >
-            {downloadingPdf ? 'Generating PDF...' : 'Download PDF'}
-          </button>
-          <button className="btn-close" onClick={handleClose}>
-            Close Tab
-          </button>
+    <>
+      <div className="report-container">
+        <div className="report-header">
+          <h1>Rfrnce</h1>
+          <div className="header-actions">
+            <button
+              className="btn btn-primary"
+              onClick={handleDownloadPDF}
+              disabled={downloadingPdf}
+            >
+              {downloadingPdf ? 'Generating PDF...' : 'Download PDF'}
+            </button>
+            <button className="btn-close" onClick={handleClose}>
+              Close Tab
+            </button>
+          </div>
+        </div>
+        <div className="report-content">
+          {reportGeneratedAt && (
+            <p className="report-timestamp">
+              Generated on {new Date(reportGeneratedAt).toLocaleString()}
+            </p>
+          )}
+          <div
+            ref={reportRef}
+            className="report-display"
+            dangerouslySetInnerHTML={{ __html: reportContent || '' }}
+          />
         </div>
       </div>
-      <div className="report-content">
-        {reportGeneratedAt && (
-          <p className="report-timestamp">
-            Generated on {new Date(reportGeneratedAt).toLocaleString()}
-          </p>
-        )}
-        <div
-          ref={reportRef}
-          className="report-display"
-          dangerouslySetInnerHTML={{ __html: reportContent || '' }}
+
+      {/* Frozen Cart Dialog */}
+      {showFrozenDialog && cartId && (
+        <FrozenCartDialog
+          cartId={parseInt(cartId, 10)}
+          onKeep={handleKeepFrozenCart}
+          onDeleted={handleDeleteFrozenCart}
         />
-      </div>
-    </div>
+      )}
+    </>
   );
 }
 
