@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import CartTabs from './components/CartTabs';
 import ProductList from './components/ProductList';
+import ReportButtons from './components/ReportButtons';
 
 function App() {
   const [activeCartId, setActiveCartId] = useState<number | null>(null);
@@ -32,12 +33,7 @@ function App() {
       </main>
 
       {/* Footer - Report Buttons */}
-      <footer className="footer">
-        <button className="btn btn-primary" disabled>
-          Generate Report
-        </button>
-        {/* "View Previous Report" button will appear here when a report exists */}
-      </footer>
+      <ReportButtons activeCartId={activeCartId} />
     </div>
   );
 }

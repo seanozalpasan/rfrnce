@@ -93,6 +93,31 @@ body {
   background-color: var(--color-bg-secondary);
 }
 
+/* Report Buttons */
+.report-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.report-buttons .btn {
+  width: 100%;
+}
+
+/* Footer states */
+.footer .loading-text,
+.footer .error-text,
+.footer .empty-text {
+  text-align: center;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  padding: var(--spacing-sm) 0;
+}
+
+.footer .error-text {
+  color: var(--color-status-error);
+}
+
 /* Buttons */
 .btn {
   border: none;

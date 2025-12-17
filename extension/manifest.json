@@ -32,5 +32,11 @@
       ],
       "js": ["src/content/content.ts"]
     }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["src/report/index.html"],
+      "matches": ["<all_urls>"]
+    }
   ]
 }
