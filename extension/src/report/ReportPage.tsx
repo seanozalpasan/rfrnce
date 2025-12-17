@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
+import DOMPurify from 'dompurify';
+import { generateReport, getReport } from '../shared/api';
 
 function ReportPage() {
   const [mode, setMode] = useState<'generate' | 'view' | null>(null);
   const [cartId, setCartId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reportContent, setReportContent] = useState<string | null>(null);
+  const [reportGeneratedAt, setReportGeneratedAt] = useState<string | null>(null);
 
   useEffect(() => {
     // Read mode and cartId from URL parameters
@@ -26,8 +30,58 @@ function ReportPage() {
 
     setMode(modeParam as 'generate' | 'view');
     setCartId(cartIdParam);
-    setLoading(false);
+
+    // Fetch the report
+    fetchReport(modeParam as 'generate' | 'view', cartIdParam);
   }, []);
+
+  const fetchReport = async (fetchMode: 'generate' | 'view', fetchCartId: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const cartIdNum = parseInt(fetchCartId, 10);
+
+      if (isNaN(cartIdNum)) {
+        setError('Invalid cart ID.');
+        setLoading(false);
+        return;
+      }
+
+      let response;
+
+      if (fetchMode === 'generate') {
+        // Generate a new report
+        response = await generateReport(cartIdNum);
+      } else {
+        // Fetch existing report
+        response = await getReport(cartIdNum);
+      }
+
+      if (response.success) {
+        // Sanitize the HTML content before rendering
+        const sanitizedContent = DOMPurify.sanitize(response.data.content, {
+          ALLOWED_TAGS: ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'br', 'strong', 'em', 'u', 'ul', 'ol', 'li', 'table', 'thead', 'tbody', 'tr', 'th', 'td', 'div', 'span'],
+          ALLOWED_ATTR: ['class', 'id'],
+        });
+
+        setReportContent(sanitizedContent);
+
+        // Set timestamp if available (only for view mode)
+        if ('generatedAt' in response.data) {
+          setReportGeneratedAt(response.data.generatedAt);
+        }
+      } else {
+        // Handle API errors with user-friendly messages
+        setError(response.error.message);
+      }
+    } catch (err) {
+      console.error('Error fetching report:', err);
+      setError('Failed to load report. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Close the tab and return to extension
   const handleClose = () => {
@@ -38,7 +92,15 @@ function ReportPage() {
     });
   };
 
-  if (loading) {
+  // Retry generating the report
+  const handleRetry = () => {
+    if (mode && cartId) {
+      fetchReport(mode, cartId);
+    }
+  };
+
+  // Show initial loading while parsing URL
+  if (loading && !mode) {
     return (
       <div className="report-container">
         <div className="report-header">
@@ -54,24 +116,60 @@ function ReportPage() {
     );
   }
 
-  if (error) {
+  // Show error state
+  if (error && !loading) {
     return (
       <div className="report-container">
         <div className="report-header">
           <h1>Rfrnce</h1>
+          <button className="btn-close" onClick={handleClose}>
+            Close Tab
+          </button>
         </div>
         <div className="report-content">
           <div className="error-state">
             <p className="error-message">{error}</p>
-            <button className="btn btn-primary" onClick={handleClose}>
-              Close Tab
-            </button>
+            <div className="error-actions">
+              {mode && cartId && (
+                <button className="btn btn-primary" onClick={handleRetry}>
+                  Retry
+                </button>
+              )}
+              <button className="btn btn-secondary" onClick={handleClose}>
+                Close Tab
+              </button>
+            </div>
           </div>
         </div>
       </div>
     );
   }
 
+  // Show loading while fetching report
+  if (loading) {
+    return (
+      <div className="report-container">
+        <div className="report-header">
+          <h1>Rfrnce</h1>
+        </div>
+        <div className="report-content">
+          <div className="loading-state">
+            <div className="spinner"></div>
+            {mode === 'generate' ? (
+              <>
+                <p>Generating your report, please wait...</p>
+                <p className="loading-subtext">This may take up to 30 seconds</p>
+              </>
+            ) : (
+              <p>Loading report...</p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show report content
   return (
     <div className="report-container">
       <div className="report-header">
@@ -81,18 +179,15 @@ function ReportPage() {
         </button>
       </div>
       <div className="report-content">
-        {mode === 'generate' ? (
-          <div className="loading-state">
-            <div className="spinner"></div>
-            <p>Generating your report, please wait...</p>
-            <p className="loading-subtext">This may take up to 30 seconds</p>
-          </div>
-        ) : (
-          <div className="loading-state">
-            <div className="spinner"></div>
-            <p>Loading report...</p>
-          </div>
+        {reportGeneratedAt && (
+          <p className="report-timestamp">
+            Generated on {new Date(reportGeneratedAt).toLocaleString()}
+          </p>
         )}
+        <div
+          className="report-display"
+          dangerouslySetInnerHTML={{ __html: reportContent || '' }}
+        />
       </div>
     </div>
   );

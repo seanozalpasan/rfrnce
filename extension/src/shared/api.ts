@@ -3,7 +3,7 @@
  */
 
 import { getUserUuid } from './storage';
-import type { ApiResponse, User, Cart, Product, CreateCartPayload, UpdateCartPayload } from './types';
+import type { ApiResponse, User, Cart, Product, CreateCartPayload, UpdateCartPayload, GenerateReportResponse, GetReportResponse } from './types';
 
 // API base URL - will be changed to Vercel URL when deployed
 const API_BASE_URL = 'http://localhost:3000/api';
@@ -135,6 +135,24 @@ export async function moveProduct(
   return apiRequest<{ message: string }>(`/carts/${cartId}/products/${productId}/move`, {
     method: 'POST',
     body: JSON.stringify({ targetCartId }),
+  });
+}
+
+/**
+ * Generate a report for a cart
+ */
+export async function generateReport(cartId: number): Promise<ApiResponse<GenerateReportResponse>> {
+  return apiRequest<GenerateReportResponse>(`/carts/${cartId}/report`, {
+    method: 'POST',
+  });
+}
+
+/**
+ * Get an existing report for a cart
+ */
+export async function getReport(cartId: number): Promise<ApiResponse<GetReportResponse>> {
+  return apiRequest<GetReportResponse>(`/carts/${cartId}/report`, {
+    method: 'GET',
   });
 }
 

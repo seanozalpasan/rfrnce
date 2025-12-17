@@ -87,7 +87,7 @@ function ReportButtons({ activeCartId }: ReportButtonsProps) {
 
     // Open report page with mode=generate
     chrome.tabs.create({
-      url: chrome.runtime.getURL(`report.html?mode=generate&cartId=${activeCartId}`),
+      url: chrome.runtime.getURL(`src/report/index.html?mode=generate&cartId=${activeCartId}`),
     });
   };
 
@@ -97,7 +97,7 @@ function ReportButtons({ activeCartId }: ReportButtonsProps) {
 
     // Open report page with mode=view
     chrome.tabs.create({
-      url: chrome.runtime.getURL(`report.html?mode=view&cartId=${activeCartId}`),
+      url: chrome.runtime.getURL(`src/report/index.html?mode=view&cartId=${activeCartId}`),
     });
   };
 
