@@ -9,7 +9,7 @@ export const RETAILER_WHITELIST: Record<string, RegExp> = {
   // Original retailers
   'www.amazon.com': /\/(dp|gp\/product)\//,
   'www.walmart.com': /\/ip\//,
-  'www.bestbuy.com': /\.p\?/,
+  'www.bestbuy.com': /\/product\//,
   'www.target.com': /\/-\/A-/,
   'www.ebay.com': /\/itm\//,
   'www.newegg.com': /\/p\//,

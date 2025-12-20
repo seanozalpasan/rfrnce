@@ -10,6 +10,9 @@ console.log('Rfrnce content script loaded');
 let isWhitelisted = false;
 let isProduct = false;
 
+// Store button reference so we can update it when URL changes
+let overlayButton: HTMLButtonElement | null = null;
+
 /**
  * Detect if current page is on a whitelisted domain and if it's a product page
  */
@@ -91,13 +94,27 @@ function injectOverlayButton() {
     }
   `;
 
-  // Create button element
-  const button = document.createElement('button');
+  // Create button element (or reuse existing if already injected)
+  let button: HTMLButtonElement;
+
+  if (overlayButton) {
+    // Button already exists, just update its state
+    button = overlayButton;
+    button.disabled = !isProduct;
+    console.log(`[Rfrnce] Overlay button state updated (enabled: ${isProduct})`);
+    return; // Don't re-inject
+  }
+
+  // Create new button
+  button = document.createElement('button');
   button.className = 'overlay-button';
   button.textContent = 'Add to Rfrnce';
 
   // Set initial state based on product page detection
   button.disabled = !isProduct;
+
+  // Store button reference
+  overlayButton = button;
 
   // Add click handler
   button.addEventListener('click', async () => {
@@ -448,10 +465,70 @@ function showToast(
   }, 3000);
 }
 
-// Run detection on page load
-detectPage();
+/**
+ * Initialize the extension on the page
+ */
+function initExtension() {
+  detectPage();
 
-// Inject overlay button if on whitelisted domain
-if (isWhitelisted) {
-  injectOverlayButton();
+  // Inject overlay button if on whitelisted domain
+  if (isWhitelisted) {
+    injectOverlayButton();
+  }
+}
+
+/**
+ * Listen for URL changes (for single-page applications)
+ * This handles both pushState/replaceState and popstate events
+ */
+function observeUrlChanges() {
+  let lastUrl = window.location.href;
+
+  // Detect URL changes via pushState/replaceState (client-side navigation)
+  const observer = new MutationObserver(() => {
+    const currentUrl = window.location.href;
+    if (currentUrl !== lastUrl) {
+      lastUrl = currentUrl;
+      console.log('[Rfrnce] URL changed via client-side navigation:', currentUrl);
+
+      // Re-run detection and update button state
+      detectPage();
+      if (isWhitelisted && overlayButton) {
+        // Update existing button state
+        overlayButton.disabled = !isProduct;
+        console.log(`[Rfrnce] Button state updated after URL change (enabled: ${isProduct})`);
+      } else if (isWhitelisted && !overlayButton) {
+        // Inject button if not already present
+        injectOverlayButton();
+      }
+    }
+  });
+
+  // Observe changes to the page (URL bar changes are reflected in document)
+  observer.observe(document.documentElement, {
+    subtree: true,
+    childList: true,
+  });
+
+  // Also listen for popstate (browser back/forward)
+  window.addEventListener('popstate', () => {
+    console.log('[Rfrnce] URL changed via popstate (back/forward)');
+    detectPage();
+    if (isWhitelisted && overlayButton) {
+      overlayButton.disabled = !isProduct;
+      console.log(`[Rfrnce] Button state updated after popstate (enabled: ${isProduct})`);
+    }
+  });
+}
+
+// Wait for DOM to be ready before initializing
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    initExtension();
+    observeUrlChanges();
+  });
+} else {
+  // DOM already loaded
+  initExtension();
+  observeUrlChanges();
 }
