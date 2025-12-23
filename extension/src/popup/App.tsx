@@ -33,7 +33,7 @@ function App() {
       </main>
 
       {/* Footer - Report Buttons */}
-      <ReportButtons activeCartId={activeCartId} />
+      <ReportButtons activeCartId={activeCartId} refreshKey={refreshKey} />
     </div>
   );
 }

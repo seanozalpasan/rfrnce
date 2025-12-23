@@ -4,9 +4,10 @@ import type { Cart, Product } from '../../shared/types';
 
 interface ReportButtonsProps {
   activeCartId: number | null;
+  refreshKey: number; // Used to trigger refresh when products change
 }
 
-function ReportButtons({ activeCartId }: ReportButtonsProps) {
+function ReportButtons({ activeCartId, refreshKey }: ReportButtonsProps) {
   const [cart, setCart] = useState<Cart | null>(null);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -47,6 +48,32 @@ function ReportButtons({ activeCartId }: ReportButtonsProps) {
 
     fetchData();
   }, [activeCartId]);
+
+  // Refresh data when products change (refreshKey increments)
+  useEffect(() => {
+    if (refreshKey > 0 && activeCartId) {
+      const fetchData = async () => {
+        try {
+          // Fetch carts to get updated reportCount and isFrozen
+          const cartsResponse = await getCarts();
+          if (cartsResponse.success) {
+            const activeCart = cartsResponse.data.find((c: Cart) => c.id === activeCartId);
+            setCart(activeCart || null);
+          }
+
+          // Fetch products for the active cart
+          const productsResponse = await getProducts(activeCartId);
+          if (productsResponse.success) {
+            setProducts(productsResponse.data);
+          }
+        } catch (err) {
+          console.error('Error refreshing cart/products:', err);
+        }
+      };
+
+      fetchData();
+    }
+  }, [refreshKey, activeCartId]);
 
   // Determine Generate Report button state
   const getGenerateButtonState = (): { disabled: boolean; tooltip: string } => {
@@ -133,15 +160,16 @@ function ReportButtons({ activeCartId }: ReportButtonsProps) {
   return (
     <footer className="footer">
       <div className="report-buttons">
-        {/* Generate Report Button */}
-        <button
-          className="btn btn-primary"
-          disabled={generateButtonState.disabled}
-          onClick={handleGenerateReport}
-          title={generateButtonState.tooltip}
-        >
-          Generate Report
-        </button>
+        {/* Generate Report Button - wrapped in div to show tooltip on disabled button */}
+        <div title={generateButtonState.disabled ? generateButtonState.tooltip : ''}>
+          <button
+            className="btn btn-primary"
+            disabled={generateButtonState.disabled}
+            onClick={handleGenerateReport}
+          >
+            Generate Report
+          </button>
+        </div>
 
         {/* View Previous Report Button - only visible if reportCount > 0 */}
         {cart.reportCount > 0 && (
