@@ -17,10 +17,36 @@ function ProductList({ activeCartId, onProductsChange }: ProductListProps) {
   useEffect(() => {
     if (!activeCartId) {
       setProducts([]);
+      setError(null);
+      setLoading(false);
       return;
     }
 
+    let cancelled = false;
+
+    const fetchProducts = async () => {
+      setLoading(true);
+      setError(null);
+
+      const response = await getProducts(activeCartId);
+
+      // Only update state if this fetch hasn't been cancelled (cart still active)
+      if (!cancelled) {
+        if (response.success) {
+          setProducts(response.data);
+        } else {
+          setError(response.error.message);
+        }
+        setLoading(false);
+      }
+    };
+
     fetchProducts();
+
+    // Cleanup: cancel this fetch if cart changes
+    return () => {
+      cancelled = true;
+    };
   }, [activeCartId]);
 
   const fetchProducts = async () => {

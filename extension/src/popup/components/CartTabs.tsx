@@ -17,6 +17,7 @@ function CartTabs({ activeCartId, onActiveCartChange, refreshKey }: CartTabsProp
   const [carts, setCarts] = useState<Cart[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [cartCreationError, setCartCreationError] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
   const [renameCart, setRenameCart] = useState<Cart | null>(null);
   const [deleteCartData, setDeleteCartData] = useState<Cart | null>(null);
@@ -32,6 +33,16 @@ function CartTabs({ activeCartId, onActiveCartChange, refreshKey }: CartTabsProp
       loadCarts();
     }
   }, [refreshKey]);
+
+  // Auto-clear cart creation error after 5 seconds
+  useEffect(() => {
+    if (cartCreationError) {
+      const timer = setTimeout(() => {
+        setCartCreationError(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [cartCreationError]);
 
   const loadCarts = async () => {
     setLoading(true);
@@ -100,6 +111,20 @@ function CartTabs({ activeCartId, onActiveCartChange, refreshKey }: CartTabsProp
           </button>
         </div>
 
+        {/* Cart Creation Error */}
+        {cartCreationError && (
+          <div className="error-banner" style={{
+            backgroundColor: 'var(--color-status-error)',
+            color: 'var(--color-text-primary)',
+            padding: 'var(--spacing-sm) var(--spacing-md)',
+            marginTop: 'var(--spacing-sm)',
+            borderRadius: 'var(--radius-md)',
+            fontSize: 'var(--font-size-sm)',
+          }}>
+            {cartCreationError}
+          </div>
+        )}
+
         {/* Add Cart Modal */}
         {showAddModal && (
           <AddCartModal
@@ -109,8 +134,10 @@ function CartTabs({ activeCartId, onActiveCartChange, refreshKey }: CartTabsProp
               setCarts([tempCart]);
               // Set as active cart
               handleSetActive(tempCart.id);
+              // Clear any previous error
+              setCartCreationError(null);
             }}
-            onCreateComplete={(tempId, realCart) => {
+            onCreateComplete={(tempId, realCart, errorMessage) => {
               if (realCart) {
                 // Replace temp cart with real cart from backend
                 setCarts([realCart]);
@@ -121,6 +148,10 @@ function CartTabs({ activeCartId, onActiveCartChange, refreshKey }: CartTabsProp
                 setCarts([]);
                 onActiveCartChange(null);
                 clearActiveCartId();
+                // Show error message if provided
+                if (errorMessage) {
+                  setCartCreationError(errorMessage);
+                }
               }
             }}
           />
@@ -172,6 +203,20 @@ function CartTabs({ activeCartId, onActiveCartChange, refreshKey }: CartTabsProp
         </button>
       </div>
 
+      {/* Cart Creation Error */}
+      {cartCreationError && (
+        <div className="error-banner" style={{
+          backgroundColor: 'var(--color-status-error)',
+          color: 'var(--color-text-primary)',
+          padding: 'var(--spacing-sm) var(--spacing-md)',
+          marginTop: 'var(--spacing-sm)',
+          borderRadius: 'var(--radius-md)',
+          fontSize: 'var(--font-size-sm)',
+        }}>
+          {cartCreationError}
+        </div>
+      )}
+
       {/* Add Cart Modal */}
       {showAddModal && (
         <AddCartModal
@@ -181,8 +226,10 @@ function CartTabs({ activeCartId, onActiveCartChange, refreshKey }: CartTabsProp
             setCarts(prevCarts => [...prevCarts, tempCart]);
             // Set as active cart
             handleSetActive(tempCart.id);
+            // Clear any previous error
+            setCartCreationError(null);
           }}
-          onCreateComplete={(tempId, realCart) => {
+          onCreateComplete={(tempId, realCart, errorMessage) => {
             if (realCart) {
               // Replace temp cart with real cart from backend
               setCarts(prevCarts => prevCarts.map(c => c.id === tempId ? realCart : c));
@@ -192,17 +239,22 @@ function CartTabs({ activeCartId, onActiveCartChange, refreshKey }: CartTabsProp
               // Remove temp cart on error
               setCarts(prevCarts => {
                 const updatedCarts = prevCarts.filter(c => c.id !== tempId);
-                // Handle active cart logic
-                if (activeCartId === tempId) {
-                  if (updatedCarts.length > 0) {
-                    handleSetActive(updatedCarts[0].id);
-                  } else {
-                    onActiveCartChange(null);
-                    clearActiveCartId();
-                  }
-                }
                 return updatedCarts;
               });
+
+              // Immediately switch to first cart to prevent ProductList error
+              const firstCart = carts.find(c => c.id !== tempId);
+              if (firstCart) {
+                handleSetActive(firstCart.id);
+              } else {
+                onActiveCartChange(null);
+                clearActiveCartId();
+              }
+
+              // Show error message if provided
+              if (errorMessage) {
+                setCartCreationError(errorMessage);
+              }
             }
           }}
         />

@@ -5,7 +5,7 @@ import type { Cart } from '../../shared/types';
 interface AddCartModalProps {
   onClose: () => void;
   onOptimisticCreate: (tempCart: Cart) => void;
-  onCreateComplete: (tempId: number, realCart: Cart | null) => void;
+  onCreateComplete: (tempId: number, realCart: Cart | null, errorMessage?: string) => void;
 }
 
 function AddCartModal({ onClose, onOptimisticCreate, onCreateComplete }: AddCartModalProps) {
@@ -43,13 +43,13 @@ function AddCartModal({ onClose, onOptimisticCreate, onCreateComplete }: AddCart
         // Replace temp cart with real cart
         onCreateComplete(tempId, response.data);
       } else {
-        // Remove temp cart and show error
-        onCreateComplete(tempId, null);
+        // Remove temp cart and pass error message
+        onCreateComplete(tempId, null, response.error.message);
         console.error('Failed to create cart:', response.error.message);
       }
     } catch (err) {
       // Remove temp cart on error
-      onCreateComplete(tempId, null);
+      onCreateComplete(tempId, null, 'Something went wrong. Please try again in a few minutes.');
       console.error('Error creating cart:', err);
     }
   };
