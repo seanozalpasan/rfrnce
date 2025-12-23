@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "Rfrnce",
+  "name": "rfrnce",
   "version": "1.0.0",
   "description": "Compare products across retail sites with AI-powered reports",
   "permissions": ["storage", "activeTab", "tabs"],

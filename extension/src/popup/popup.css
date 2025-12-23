@@ -69,7 +69,7 @@ body {
 
 /* Header */
 .header {
-  padding: var(--spacing-lg);
+  padding: var(--spacing-md);
   border-bottom: 1px solid var(--color-border);
 }
 
@@ -440,6 +440,17 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.product-name-link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+  transition: color 0.2s ease;
+}
+
+.product-name-link:hover {
+  color: var(--color-accent-secondary);
 }
 
 .product-price {

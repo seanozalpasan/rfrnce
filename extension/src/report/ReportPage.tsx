@@ -153,7 +153,7 @@ function ReportPage() {
     return (
       <div className="report-container">
         <div className="report-header">
-          <h1>Rfrnce</h1>
+          <h1>rfrnce</h1>
         </div>
         <div className="report-content">
           <div className="loading-state">
@@ -170,7 +170,7 @@ function ReportPage() {
     return (
       <div className="report-container">
         <div className="report-header">
-          <h1>Rfrnce</h1>
+          <h1>rfrnce</h1>
           <button className="btn-close" onClick={handleClose}>
             Close Tab
           </button>
@@ -199,7 +199,7 @@ function ReportPage() {
     return (
       <div className="report-container">
         <div className="report-header">
-          <h1>Rfrnce</h1>
+          <h1>rfrnce</h1>
         </div>
         <div className="report-content">
           <div className="loading-state">
@@ -223,7 +223,7 @@ function ReportPage() {
     <>
       <div className="report-container">
         <div className="report-header">
-          <h1>Rfrnce</h1>
+          <h1>rfrnce</h1>
           <div className="header-actions">
             <button
               className="btn btn-primary"

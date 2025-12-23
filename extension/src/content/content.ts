@@ -108,7 +108,7 @@ function injectOverlayButton() {
   // Create new button
   button = document.createElement('button');
   button.className = 'overlay-button';
-  button.textContent = 'Add to Rfrnce';
+  button.textContent = 'Add to rfrnce';
 
   // Set initial state based on product page detection
   button.disabled = !isProduct;

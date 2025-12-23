@@ -1,7 +1,7 @@
 {
   "name": "rfrnce-extension",
   "version": "1.0.0",
-  "description": "Rfrnce Chrome Extension - Compare products across retail sites with AI-powered reports",
+  "description": "rfrnce Chrome Extension - Compare products across retail sites with AI-powered reports",
   "type": "module",
   "scripts": {
     "dev": "vite",

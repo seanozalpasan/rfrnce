@@ -151,7 +151,7 @@ function ProductList({ activeCartId, onProductsChange }: ProductListProps) {
           No products yet
         </p>
         <p className="text-secondary" style={{ fontSize: 'var(--font-size-xs)' }}>
-          Visit any product page on 40 supported retailers and click "Add to Rfrnce"
+          Visit any product page on 40 supported retailers and click "Add to rfrnce"
         </p>
       </div>
     );
@@ -191,7 +191,18 @@ function ProductList({ activeCartId, onProductsChange }: ProductListProps) {
 
           {/* Product Info */}
           <div className="product-info">
-            <div className="product-name">{getDisplayName(product)}</div>
+            {product.status === 'complete' ? (
+              <a
+                href={product.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="product-name product-name-link"
+              >
+                {getDisplayName(product)}
+              </a>
+            ) : (
+              <div className="product-name">{getDisplayName(product)}</div>
+            )}
             <div className="product-price">{product.price || '—'}</div>
           </div>
 
