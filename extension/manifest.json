@@ -5,7 +5,7 @@
   "description": "Compare products across retail sites with AI-powered reports",
   "permissions": ["storage", "activeTab", "tabs"],
   "host_permissions": [
-    "https://your-backend.vercel.app/*",
+    "https://rfrnce.vercel.app/*",
     "https://www.amazon.com/*",
     "https://www.walmart.com/*",
     "https://www.bestbuy.com/*",

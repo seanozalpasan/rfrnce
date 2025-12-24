@@ -5,8 +5,8 @@
 import { getUserUuid } from './storage';
 import type { ApiResponse, User, Cart, Product, CreateCartPayload, UpdateCartPayload, GenerateReportResponse, GetReportResponse } from './types';
 
-// API base URL - will be changed to Vercel URL when deployed
-const API_BASE_URL = 'http://localhost:3000/api';
+// API base URL - Production Vercel deployment
+const API_BASE_URL = 'https://rfrnce.vercel.app/api';
 
 /**
  * Make authenticated API request
